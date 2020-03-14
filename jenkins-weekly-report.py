@@ -5,7 +5,7 @@ import argparse
 import time
 from datetime import datetime, timedelta
 from os import path
-from typing import List
+from typing import List, Dict
 
 import requests
 from jinja2 import Template
@@ -17,8 +17,8 @@ def list_job_names(jenkins_url, jenkins_user, jenkins_token) -> List[str]:
     return [job['name'] for job in resp['jobs']]
 
 
-def count_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timestamp) -> (int, int):
-    offset, limit, success, not_success = 0, 5, 0, 0
+def count_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timestamp) -> (int, int, List[Dict]):
+    offset, limit, success, not_success, builds = 0, 5, 0, 0, []
     while True:
         resp = requests.get(f'{jenkins_url}/job/{job_name}/api/json',
                             params={'tree': 'builds[number,timestamp,result]{' + str(offset) + ',' + str(
@@ -39,67 +39,103 @@ def count_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timesta
                 success = success + 1
             else:
                 not_success = not_success + 1
+            # append builds
+            builds.append({
+                'number': build['number'],
+                'success': build['result'] == 'SUCCESS',
+                'timestamp': datetime.fromtimestamp(build['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M:%S'),
+            })
         # if end marked break loop
         if end:
             break
         # next page
         offset += limit
-    return success, not_success
+    return success, not_success, builds
 
 
 TMPL = """
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>{{report_name}} {{report_date}}</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/neoflat@4.4.1/dist/neoflat/bootstrap.min.css" />
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
-    </head>
-    <body>
-        <div class="container">
-            <div class="row mt-3 mb-3">
-                <div class="col-md-12">
-                    <h5>Jenkins Weekly Report</h5>
-                </div>
-                <div class="col-md-6">
-                    <h4><b>{{report_name}} {{report_date}}</b></h4>
-                </div>
-                <div class="col-md-6 text-right">
-                    <h5>
-                        <span><i class="fa fa-cogs"></i> {{total_total}}</span>&nbsp;&nbsp;
-                        <span class="text-success"><i class="fa fa-check-circle"></i> {{total_success}}</span>&nbsp;&nbsp;
-                        <span class="text-danger"><i class="fa fa-exclamation-triangle"></i> {{total_not_success}}</span>&nbsp;&nbsp;
-                    </h5>
-                </div>
+
+<head>
+    <title>{{report_name}} {{report_date}}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/neoflat@4.4.1/dist/neoflat/bootstrap.min.css" />
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="row mt-3 mb-3">
+            <div class="col-md-12">
+                <h5>Jenkins Weekly Report</h5>
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><i class="fa fa-cube"></i> Job Name</th>
-                                <th><i class="fa fa-cogs"></i></th>
-                                <th class="text-success"><i class="fa fa-check-circle"></i></th>
-                                <th class="text-danger"><i class="fa fa-exclamation-triangle"></i></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in data %}
-                            <tr>
-                                <td><b>{{ item.job_name }}</b></td>
-                                <td>{{ item.total }}</td>
-                                <td class="text-success">{{ item.success }}</td>
-                                <td class="text-danger">{{ item.not_success }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="col-md-6">
+                <h4><b>{{report_name}} {{report_date}}</b></h4>
+            </div>
+            <div class="col-md-6 text-right">
+                <h5>
+                    <span><i class="fa fa-cogs"></i> {{total_total}}</span>&nbsp;&nbsp;
+                    <span class="text-success"><i class="fa fa-check-circle"></i> {{total_success}}</span>&nbsp;&nbsp;
+                    <span class="text-danger"><i class="fa fa-exclamation-triangle"></i>
+                        {{total_not_success}}</span>&nbsp;&nbsp;
+                </h5>
             </div>
         </div>
-    </body>
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fa fa-cubes"></i> Jobs</th>
+                            <th>&nbsp;&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in data %}
+                        <tr>
+                            <td>
+                                <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}" target="_blank">
+                                    <b>{{ item.job_name }}</b>
+                                </a>
+                            </td>
+                            <td>
+                                <span><i class="fa fa-cogs"></i>&nbsp;{{ item.total }}&nbsp;&nbsp;</span>
+                                <span class="text-success"><i
+                                        class="fa fa-check-circle"></i>&nbsp;{{ item.success }}&nbsp;&nbsp;</span>
+                                <span class="text-danger"><i
+                                        class="fa fa-exclamation-triangle"></i>&nbsp;{{ item.not_success }}&nbsp;&nbsp;</span>
+                            </td>
+                        </tr>
+                        {% for build in item.builds %}
+                        <tr>
+                            <td class="pl-5">
+                                {% if build.success %}
+                                <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}/{{build.number}}"
+                                    target="_blank">
+                                    <span class="text-success"><i
+                                            class="fa fa-check-circle"></i></span>&nbsp;<b>{{ build.number }}</b>
+                                </a>
+                                {% else %}
+                                <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}/{{build.number}}"
+                                    target="_blank">
+                                    <span class="text-danger"><i
+                                            class="fa fa-exclamation-triangle"></i></span>&nbsp;<b>{{ build.number }}</b>
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted">{{build.timestamp}}</td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
 </html>
 """
 
@@ -107,6 +143,7 @@ TMPL = """
 def main():
     parser = argparse.ArgumentParser(description='Generate Weekly Report of Jenkins Builds')
     parser.add_argument('--url', dest='url', type=str, help='jenkins url')
+    parser.add_argument('--public-url', dest='public_url', type=str, help='jenkins public url')
     parser.add_argument('--user', dest='user', type=str, help='jenkins user')
     parser.add_argument('--token', dest='token', type=str, help='jenkins user token')
     parser.add_argument('--dir', dest='dir', type=str, default='.', help='dir of report')
@@ -123,17 +160,23 @@ def main():
     total_success, total_not_success = 0, 0
     job_names = list_job_names(args.url, args.user, args.token)
     for i, job_name in enumerate(job_names):
-        success, not_success = count_job_builds(args.url, args.user, args.token, job_name,
-                                                int(beginning_of_week.timestamp() * 1000))
+        success, not_success, builds = count_job_builds(args.url, args.user, args.token, job_name,
+                                                        int(beginning_of_week.timestamp() * 1000))
         print(f'{i + 1}/{len(job_names)}: {job_name}')
         if success > 0 or not_success > 0:
             total_success += success
             total_not_success += not_success
-            data.append(
-                {'job_name': job_name, 'success': success, 'not_success': not_success, 'total': success + not_success})
+            data.append({
+                'job_name': job_name,
+                'success': success,
+                'not_success': not_success,
+                'total': success + not_success,
+                'builds': builds,
+            })
 
     Template(TMPL).stream(
         data=data,
+        public_url=args.public_url,
         report_name=args.report_name,
         report_date=report_date,
         total_success=total_success,
