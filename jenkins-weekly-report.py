@@ -167,7 +167,6 @@ def main():
                 'total': success + not_success,
                 'builds': builds,
             })
-            break
 
     Template(TMPL).stream(
         data=data,
