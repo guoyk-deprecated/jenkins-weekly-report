@@ -100,11 +100,10 @@ TMPL = """
                                 </a>
                             </td>
                             <td>
-                                <span><i class="fa fa-cogs"></i>&nbsp;&nbsp;<b>{{ item.total }}</b>&nbsp;&nbsp;</span>
                                 <span class="text-success"><i
                                         class="fa fa-check-circle"></i>&nbsp;&nbsp;<b>{{ item.success }}</b>&nbsp;&nbsp;</span>
                                 <span class="text-danger"><i
-                                        class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;<b>{{ item.not_success }}</b>&nbsp;&nbsp;</span>
+                                        class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;<b>{{ item.not_success }}</b></span>
                             </td>
                         </tr>
                         {% for build in item.builds %}
