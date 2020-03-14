@@ -76,7 +76,7 @@ TMPL = """
                 <h5>Jenkins Weekly Report</h5>
             </div>
             <div class="col-md-6">
-                <h4><b>{{report_name}} {{report_date}}</b></h4>
+                <h4><b>{{report_name}} {{report_from}} <i class="fa fa-angle-right"></i> {{report_date}}</b></h4>
             </div>
             <div class="col-md-6 text-right">
                 <h5>
@@ -148,6 +148,7 @@ def main():
     beginning_of_week -= timedelta(days=beginning_of_week.weekday())
 
     report_date = time.strftime("%Y-%m-%d", time.localtime())
+    report_from = time.strftime("%Y-%m-%d", beginning_of_week.timetuple())
 
     data = []
 
@@ -172,6 +173,7 @@ def main():
         data=data,
         public_url=args.public_url,
         report_name=args.report_name,
+        report_from=report_from,
         report_date=report_date,
         total_success=total_success,
         total_not_success=total_not_success,
