@@ -60,7 +60,14 @@ TMPL = """
             <div class="row mt-3 mb-3">
                 <div class="col-md-12">
                     <h4>Jenkins Weekly Report</h4>
-                    <h2>{{report_name}} {{report_date}}</h2>
+                    <h3>
+                        {{report_name}} {{report_date}}&nbsp;&nbsp;
+                        <small>
+                        <span><i class="fa fa-cogs"></i> {{total_total}}</span>&nbsp;&nbsp;
+                        <span class="text-success"><i class="fa fa-check-circle"></i> {{total_success}}</span>&nbsp;&nbsp;
+                        <span class="text-danger"><i class="fa fa-exclamation-triangle"></i> {{total_not_success}}</span>&nbsp;&nbsp;
+                        </small>
+                    </h3>
                 </div>
             </div>
             <div class="row">
@@ -68,10 +75,10 @@ TMPL = """
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th><i class="fa fa-cube"/> Job Name</th>
-                                <th><i class="fa fa-cogs"/></th>
-                                <th><i class="fa fa-check-circle"/></th>
-                                <th><i class="fa fa-exclamation-triangle"/></th>
+                                <th><i class="fa fa-cube"></i> Job Name</th>
+                                <th><i class="fa fa-cogs"></i></th>
+                                <th class="text-success"><i class="fa fa-check-circle"></i></th>
+                                <th class="text-danger"><i class="fa fa-exclamation-triangle"></i></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -109,15 +116,26 @@ def main():
 
     data = []
 
+    total_success, total_not_success = 0, 0
     job_names = list_job_names(args.url, args.user, args.token)
     for job_name in job_names:
         success, not_success = count_job_builds(args.url, args.user, args.token, job_name,
                                                 int(beginning_of_week.timestamp() * 1000))
         if success > 0 or not_success > 0:
+            total_success += success
+            total_not_success += not_success
             data.append(
                 {'job_name': job_name, 'success': success, 'not_success': not_success, 'total': success + not_success})
+            break
 
-    Template(TMPL).stream(data=data, report_name=args.report_name, report_date=report_date).dump(
+    Template(TMPL).stream(
+        data=data,
+        report_name=args.report_name,
+        report_date=report_date,
+        total_success=total_success,
+        total_not_success=total_not_success,
+        total_total=total_success + total_not_success,
+    ).dump(
         path.join(args.dir, f'REPORT-{report_date}.html')
     )
 
