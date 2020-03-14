@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from os import path
 
 import requests
+from jinja2 import Template
 
 
 def list_job_names(jenkins_url, jenkins_user, jenkins_token):
@@ -15,7 +16,7 @@ def list_job_names(jenkins_url, jenkins_user, jenkins_token):
     return [job['name'] for job in resp['jobs']]
 
 
-def list_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timestamp):
+def count_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timestamp):
     offset, limit, success, not_success = 0, 5, 0, 0
     while True:
         resp = requests.get(f'{jenkins_url}/job/{job_name}/api/json',
@@ -45,29 +46,80 @@ def list_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timestam
     return success, not_success
 
 
+TMPL = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{report_name}} {{report_date}}</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/neoflat@4.4.1/dist/neoflat/bootstrap.min.css" integrity="sha256-GNVjGVdZcMXJDF/FzQvaoP9Zlt7UuNvym/1i60c4tf0=" crossorigin="anonymous">
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row mt-3 mb-3">
+                <div class="col-md-12">
+                    <h4>Jenkins Weekly Report</h4>
+                    <h2>{{report_name}} {{report_date}}</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fa fa-cube"/> Job Name</th>
+                                <th><i class="fa fa-cogs"/></th>
+                                <th><i class="fa fa-check-circle"/></th>
+                                <th><i class="fa fa-exclamation-triangle"/></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in data %}
+                            <tr>
+                                <td><b>{{ item.job_name }}</b></td>
+                                <td>{{ item.total }}</td>
+                                <td class="text-success">{{ item.success }}</td>
+                                <td class="text-danger">{{ item.not_success }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+"""
+
+
 def main():
     parser = argparse.ArgumentParser(description='Generate Weekly Report of Jenkins Builds')
     parser.add_argument('--url', dest='url', type=str, help='jenkins url')
     parser.add_argument('--user', dest='user', type=str, help='jenkins user')
     parser.add_argument('--token', dest='token', type=str, help='jenkins user token')
     parser.add_argument('--dir', dest='dir', type=str, default='.', help='dir of report')
+    parser.add_argument('--report-name', dest='report_name', type=str, default='', help='name of report')
     args = parser.parse_args()
 
     beginning_of_week = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     beginning_of_week -= timedelta(days=beginning_of_week.weekday())
 
-    f = open(path.join(args.dir, f'REPORT-{time.strftime("%Y-%m-%d", time.localtime())}.csv'), 'w')
+    report_date = time.strftime("%Y-%m-%d", time.localtime())
 
-    f.write('JOB_NAME, SUCCESS, NOT_SUCCESS, TOTAL\n')
+    data = []
 
     job_names = list_job_names(args.url, args.user, args.token)
     for job_name in job_names:
-        success, not_success = list_job_builds(args.url, args.user, args.token, job_name,
-                                               int(beginning_of_week.timestamp() * 1000))
+        success, not_success = count_job_builds(args.url, args.user, args.token, job_name,
+                                                int(beginning_of_week.timestamp() * 1000))
         if success > 0 or not_success > 0:
-            f.write(f'{job_name}, {success}, {not_success}, {success + not_success}\n')
+            data.append(
+                {'job_name': job_name, 'success': success, 'not_success': not_success, 'total': success + not_success})
 
-    f.close()
+    Template(TMPL).stream(data=data, report_name=args.report_name, report_date=report_date).dump(
+        path.join(args.dir, f'REPORT-{report_date}.html')
+    )
 
 
 if __name__ == '__main__':

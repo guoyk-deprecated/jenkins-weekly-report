@@ -125,7 +125,7 @@ dmypy.json
 .pyre/
 
 # Generated Reports
-*.csv
+*.html
 
 # PyCharm
 .idea/
