@@ -60,15 +60,17 @@ TMPL = """
         <div class="container">
             <div class="row mt-3 mb-3">
                 <div class="col-md-12">
-                    <h4>Jenkins Weekly Report</h4>
-                    <h3>
-                        {{report_name}} {{report_date}}&nbsp;&nbsp;
-                        <small>
+                    <h5>Jenkins Weekly Report</h4>
+                </div>
+                <div class="col-md-6">
+                    <h4><b>{{report_name}} {{report_date}}</b></h4>
+                </div>
+                <div class="col-md-6 text-right">
+                    <h4>
                         <span><i class="fa fa-cogs"></i> {{total_total}}</span>&nbsp;&nbsp;
                         <span class="text-success"><i class="fa fa-check-circle"></i> {{total_success}}</span>&nbsp;&nbsp;
                         <span class="text-danger"><i class="fa fa-exclamation-triangle"></i> {{total_not_success}}</span>&nbsp;&nbsp;
-                        </small>
-                    </h3>
+                    </h4>
                 </div>
             </div>
             <div class="row">
