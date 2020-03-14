@@ -52,15 +52,15 @@ TMPL = """
     <head>
         <title>{{report_name}} {{report_date}}</title>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/neoflat@4.4.1/dist/neoflat/bootstrap.min.css" integrity="sha256-GNVjGVdZcMXJDF/FzQvaoP9Zlt7UuNvym/1i60c4tf0=" crossorigin="anonymous">
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/neoflat@4.4.1/dist/neoflat/bootstrap.min.css" />
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
     </head>
     <body>
         <div class="container">
             <div class="row mt-3 mb-3">
                 <div class="col-md-12">
-                    <h5>Jenkins Weekly Report</h4>
+                    <h5>Jenkins Weekly Report</h5>
                 </div>
                 <div class="col-md-6">
                     <h4><b>{{report_name}} {{report_date}}</b></h4>
