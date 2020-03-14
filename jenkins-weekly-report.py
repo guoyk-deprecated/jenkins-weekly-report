@@ -76,36 +76,31 @@ TMPL = """
             </div>
             <div class="col-md-6 text-right">
                 <h5>
-                    <span><i class="fa fa-cogs"></i> {{total_total}}</span>&nbsp;&nbsp;
-                    <span class="text-success"><i class="fa fa-check-circle"></i> {{total_success}}</span>&nbsp;&nbsp;
-                    <span class="text-danger"><i class="fa fa-exclamation-triangle"></i>
-                        {{total_not_success}}</span>&nbsp;&nbsp;
+                    <span><i class="fa fa-cogs"></i>&nbsp;&nbsp;<b>{{total_total}}</b></span>&nbsp;&nbsp;
+                    <span class="text-success"><i
+                            class="fa fa-check-circle"></i>&nbsp;&nbsp;<b>{{total_success}}</b></span>&nbsp;&nbsp;
+                    <span class="text-danger"><i
+                            class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;<b>{{total_not_success}}</b></span>
                 </h5>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
                 <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th><i class="fa fa-cubes"></i> Jobs</th>
-                            <th>&nbsp;&nbsp;</th>
-                        </tr>
-                    </thead>
                     <tbody>
                         {% for item in data %}
-                        <tr>
+                        <tr class="table-light">
                             <td>
                                 <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}" target="_blank">
-                                    <b>{{ item.job_name }}</b>
+                                    <b><i class="fa fa-cube"></i>&nbsp;&nbsp;{{ item.job_name }}</b>
                                 </a>
                             </td>
                             <td>
-                                <span><i class="fa fa-cogs"></i>&nbsp;{{ item.total }}&nbsp;&nbsp;</span>
+                                <span><i class="fa fa-cogs"></i>&nbsp;&nbsp;<b>{{ item.total }}</b>&nbsp;&nbsp;</span>
                                 <span class="text-success"><i
-                                        class="fa fa-check-circle"></i>&nbsp;{{ item.success }}&nbsp;&nbsp;</span>
+                                        class="fa fa-check-circle"></i>&nbsp;&nbsp;<b>{{ item.success }}</b>&nbsp;&nbsp;</span>
                                 <span class="text-danger"><i
-                                        class="fa fa-exclamation-triangle"></i>&nbsp;{{ item.not_success }}&nbsp;&nbsp;</span>
+                                        class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;<b>{{ item.not_success }}</b>&nbsp;&nbsp;</span>
                             </td>
                         </tr>
                         {% for build in item.builds %}
@@ -173,6 +168,7 @@ def main():
                 'total': success + not_success,
                 'builds': builds,
             })
+            break
 
     Template(TMPL).stream(
         data=data,
