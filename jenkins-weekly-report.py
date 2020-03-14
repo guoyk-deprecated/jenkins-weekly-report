@@ -126,7 +126,6 @@ def main():
             total_not_success += not_success
             data.append(
                 {'job_name': job_name, 'success': success, 'not_success': not_success, 'total': success + not_success})
-            break
 
     Template(TMPL).stream(
         data=data,
