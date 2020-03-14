@@ -4,6 +4,7 @@
 import argparse
 import time
 from datetime import datetime, timedelta
+from os import path
 
 import requests
 
@@ -49,13 +50,13 @@ def main():
     parser.add_argument('--url', dest='url', type=str, help='jenkins url')
     parser.add_argument('--user', dest='user', type=str, help='jenkins user')
     parser.add_argument('--token', dest='token', type=str, help='jenkins user token')
-    parser.add_argument('--filename', dest='filename', type=str, default='jenkins-report', help='filename to create')
+    parser.add_argument('--dir', dest='dir', type=str, default='.', help='dir of report')
     args = parser.parse_args()
 
     beginning_of_week = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     beginning_of_week -= timedelta(days=beginning_of_week.weekday())
 
-    f = open(f'{args.filename}-{time.strftime("%Y-%m-%d", time.localtime())}', 'w')
+    f = open(path.join(args.dir, f'REPORT-{time.strftime("%Y-%m-%d", time.localtime())}.csv'), 'w')
 
     f.write('JOB_NAME, SUCCESS, NOT_SUCCESS, TOTAL\n')
 
