@@ -105,22 +105,21 @@ TMPL = """
                         </tr>
                         {% for build in item.builds %}
                         <tr>
-                            <td class="pl-5">
+                            <td class="pl-5" colspan="2">
                                 {% if build.success %}
                                 <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}/{{build.number}}"
                                     target="_blank">
                                     <span class="text-success"><i
-                                            class="fa fa-check-circle"></i></span>&nbsp;<b>{{ build.number }}</b>
+                                            class="fa fa-check-circle"></i></span>&nbsp;&nbsp;{{build.timestamp}}</span>&nbsp;<b>(#{{ build.number }})</b>
                                 </a>
                                 {% else %}
                                 <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}/{{build.number}}"
                                     target="_blank">
                                     <span class="text-danger"><i
-                                            class="fa fa-exclamation-triangle"></i></span>&nbsp;<b>{{ build.number }}</b>
+                                            class="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;{{build.timestamp}}</span>&nbsp;<b>(#{{ build.number }})</b>
                                 </a>
                                 {% endif %}
                             </td>
-                            <td class="text-muted">{{build.timestamp}}</td>
                         </tr>
                         {% endfor %}
                         {% endfor %}
