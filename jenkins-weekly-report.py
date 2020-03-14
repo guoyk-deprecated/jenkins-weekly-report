@@ -69,6 +69,10 @@ TMPL = """
     <div class="container">
         <div class="row mt-3 mb-3">
             <div class="col-md-12">
+                <h5><a href="../"><i class="fa fa-arrow-circle-o-up"></i>&nbsp;<i class="fa fa-folder-open"></i>&nbsp;<b>../</b></a></h5>
+            </div>
+ 
+            <div class="col-md-12">
                 <h5>Jenkins Weekly Report</h5>
             </div>
             <div class="col-md-6">
@@ -163,6 +167,7 @@ def main():
                 'total': success + not_success,
                 'builds': builds,
             })
+            break
 
     Template(TMPL).stream(
         data=data,
