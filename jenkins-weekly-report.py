@@ -11,10 +11,10 @@ import requests
 from jinja2 import Template
 
 
-def list_job_names(jenkins_url, jenkins_user, jenkins_token) -> List[str]:
-    resp = requests.get(f'{jenkins_url}/api/json', params={'tree': 'jobs[name]'},
+def list_jobs(jenkins_url, jenkins_user, jenkins_token) -> List[Dict]:
+    resp = requests.get(f'{jenkins_url}/api/json', params={'tree': 'jobs[name,description]'},
                         auth=(jenkins_user, jenkins_token)).json()
-    return [job['name'] for job in resp['jobs']]
+    return [job for job in resp['jobs']]
 
 
 def count_job_builds(jenkins_url, jenkins_user, jenkins_token, job_name, timestamp) -> (int, int, List[Dict]):
@@ -98,6 +98,8 @@ TMPL = """
                                 <a class="text-primary" href="{{public_url}}/job/{{item.job_name}}" target="_blank">
                                     <b><i class="fa fa-cube"></i>&nbsp;&nbsp;{{ item.job_name }}</b>
                                 </a>
+                                &nbsp;
+                                <small>{{ item.job_description }}</small>
                             </td>
                             <td>
                                 <span class="text-success"><i
@@ -152,16 +154,19 @@ def main():
     data = []
 
     total_success, total_not_success = 0, 0
-    job_names = list_job_names(args.url, args.user, args.token)
-    for i, job_name in enumerate(job_names):
+    jobs = list_jobs(args.url, args.user, args.token)
+    for i, job in enumerate(jobs):
+        job_name = job["name"]
+        job_description = job["description"]
         success, not_success, builds = count_job_builds(args.url, args.user, args.token, job_name,
                                                         int(beginning_of_week.timestamp() * 1000))
-        print(f'{i + 1}/{len(job_names)}: {job_name}')
+        print(f'{i + 1}/{len(jobs)}: {job_name}')
         if success > 0 or not_success > 0:
             total_success += success
             total_not_success += not_success
             data.append({
                 'job_name': job_name,
+                'job_description': job_description,
                 'success': success,
                 'not_success': not_success,
                 'total': success + not_success,
